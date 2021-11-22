@@ -1,6 +1,7 @@
 import os
 import copy 
-import math 
+import math
+from typing import Counter 
 import numpy as np 
 import mmcv 
 import torch
@@ -15,6 +16,14 @@ class ImageType:
     DEPTH = 1
     MASK = 2
     POINTCLOUD = 4
+
+
+class SpartanDatasetDataType:
+    SINGLE_OBJECT_WITHIN_SCENE = 0
+    SINGLE_OBJECT_ACROSS_SCENE = 1
+    DIFFERENT_OBJECT = 2
+    MULTI_OBJECT = 3
+    SYNTHETIC_MULTI_OBJECT = 4
 
 
 class SceneStructure(object):
@@ -132,6 +141,48 @@ class SceneStructure(object):
         random.choice(image_idxs)
         random_idx = random.choice(image_idxs)
         return random_idx
+    
+    def get_img_idx_with_different_pose(self, scene_name, pose_a, threshold = 0.2, angle_threshold = 20, num_attempts = 10):
+        """
+        Try to get an image with a different pose to the one passed in. If one can't be found
+        then return None
+
+
+        Args:
+            scene_name ([type]): [description]
+            pose_a ([type]): [description]
+            threshold (float, optional): [description]. Defaults to 0.2.
+            angle_threshold (int, optional): [description]. Defaults to 20.
+            num_attempts (int, optional): [description]. Defaults to 10.
+
+        Raises:
+            ValueError: [description]
+            ValueError: [description]
+            ValueError: [description]
+            ValueError: [description]
+            ValueError: [description]
+
+        Returns:
+            [type]: [description]
+
+        Yields:
+            [type]: [description]
+        """
+        
+        counter = 0
+        while counter < num_attempts:
+            img_idx = self.get_random_image_index(scene_name)
+            pose = self.get_pose_from_scene_name_and_idx(scene_name, img_idx)
+            
+            diff = utils.compute_distance_between_poses(pose_a, pose)
+            angle_diff = utils.compute_angle_between_poses(pose_a, pose)
+            if(diff > threshold)  or (angle_diff > angle_threshold):
+                return img_idx
+            counter += 1
+        
+        return None
+        
+        
 
 
 
@@ -244,6 +295,7 @@ class SpartanDataSource(DenseCorrDataSource):
             num_images_this_scene = len(all_rgb_images_in_scene)
             self.num_images_total += num_images_this_scene
             self._num_scenes +=1
+        
     
     def get_scene_list(self, mode=None):
         """
@@ -382,6 +434,172 @@ class SpartanDataSource(DenseCorrDataSource):
             if scene_name not in self._pose_data:
             # log
                 self._pose_data[scene_name]= self._scene_structure.get_pose_data(scene_name)
+                
+                
+    
+    def get_length(self):
+        """interface for dataset to get the __len__
+
+        Returns:
+            [int]: [description]
+        """
+        
+        
+        length=0
+        
+        return length
+    
+    
+    
+    def get_sample(self, idx=None):
+        """interface for  dataset to get the item
+
+        Args:
+            idx ([type], optional): [description]. Defaults to None.
+
+        Returns:
+            [type]: dict() for supple the data to dataset __getitem__ methods
+        """
+        
+        
+        dataDict = dict()
+        
+        data_load_type = self._get_data_load_type()
+        
+        # Case 0: Same Scene, same object 
+        if data_load_type == SpartanDatasetDataType.SINGLE_OBJECT_WITHIN_SCENE:
+            if self._verbose:
+                print("Same scene, same object")
+            return self.get_single_object_within_scene_data()
+        
+        # case 1: Same object , different scene
+        if data_load_type == SpartanDatasetDataType.SINGLE_OBJECT_ACROSS_SCENE:
+            if self._verbose:
+                print("Same object, different scene")
+            return self.get_single_object_across_scene_data()
+        
+        #case 2: Different object
+        if data_load_type == SpartanDatasetDataType.DIFFERENT_OBJECT:
+            if self._verbose:
+                print("Different object")
+            return self.get_different_object_data()
+        # Case 3: Multi object 
+        if data_load_type == SpartanDatasetDataType.MULTI_OBJECT:
+            if self._verbose:
+                print("Multi object")
+            return self.get_multi_object_within_scene_data()
+        
+        # Case 4: Synthetic multi object
+        if data_load_type == SpartanDatasetDataType.SYNTHETIC_MULTI_OBJECT:
+            if self._verbose:
+                print("Synthetic multi object")
+            return self.get_synthetic_multi_object_within_scene_data()
+        
+        
+        
+        return  dataDict
+    
+    
+    
+    #######################################################################
+    #####       case 1:
+    #######################################################################
+    
+    def get_single_object_within_scene_data(self):
+        """
+        """
+        if self.get_number_of_unique_single_objects() == 0:
+            raise ValueError("There are no single object scenes in this dataset")
+        
+        object_id = self.get_random_object_id()
+        scene_name = self.get_random_single_object_scene_name(object_id)
+        
+        metadata = dict()
+        metadata["object_id"] = object_id
+        metadata["object_id_int"] =  sorted(self._single_object_scene_dict.keys()).index(object_id)
+        metadata["type"] = SpartanDatasetDataType.SINGLE_OBJECT_WITHIN_SCENE
+        
+        return self.get_within_scene_data(scene_name, metadata)
+    
+    
+    def get_within_scene_data(self,scene_name, metadata,for_synthetic_multi_object=False):
+        """The method through which the dataset is accessed for training.
+        
+        Each call is the result of 
+        a random sampling over: 
+        - random scene 
+        - random rgbd frame from that scene 
+        - random rgbd frame (different enough pose) from that scene 
+        - various randomization in the match generation and non-match generation procedure 
+        
+        return a larege amount of variables, separated by commas.
+        
+        0th return arg: the type of data sampled (this can be used as a flag for different loss fuctions)
+        0th type: string
+        
+        1st, 2nd return args: image_a_rgb, image_b_rgb
+        1st, 2nd rtype: 3-dimensional torch.FloatTensor of shape (image_height, image_width,3)
+        
+        3rd, 4th return args: matches_a , matches_b
+        3rd, 4th rtype: 1-dimensional torch.LongTensor of shape (num_matches)
+        
+        5th, 6th return args: masked_non_matches_a, masted non_matches_b
+        5thm 6th rtype: 1-demensional torch.LongTensor of shape (num_non_matches)
+        
+        7th, 8th return args: non_masked_non_matches_a, non_masked_non_matches_b
+        7th, 8th rtype: 1-dimensinal torch.LongTensor of shape (num_non_matches)
+        
+        9th,10th return args: blind_non_matches_a, blind_non_matches_b
+        9th,10th rtype: 1-dimensional torch.LongTensor of shape(num_non_matches)
+        
+        11th return arg: metadata useful for plotting, and-or other flags for loss functions
+        11th rtype: dict
+        
+        Return values 3,4,5,6,7,8,9,10 are all in the "single index" format for pixels. That is 
+        
+        (u,v) ----> n = u + image_width*v
+        
+        If no datapoints were found for some type of match or non-match then we return our "special"
+        empty tensor. Note that due to the way the pytorch data loader functions cannot return an empty
+        tensor like torch.FloatTensor([]). So we return SpartanDataset.empty_tensor()
+        
+        
+        
+        
+        
+
+        Args:
+            scene_name ([type]): [description]
+            metadata ([type]): [description]
+            for_synthetic_multi_object (bool, optional): [description]. Defaults to False.
+        """
+        
+        image_a_idx = self.get_random_image_index(scene_name)
+        image_a, image_a_depth, image_a_mask, image_a_pose = self._scene_structure.get_rgbd_mask_pose(scene_name, image_a_idx)
+        
+        metadata['image_a_idx'] = image_a_idx
+        
+        # image b
+        image_b_idx = self._scene_structure.get_img_idx_with_different_pose(scene_name, image_a_pose, num_attempts=50)
+        metadata['image_a_idx'] = image_b_idx
+        # if there not fount image_b then return the empty_data
+        if image_b_idx is None:
+            
+            return self.return_empty_data()
+        
+        image_b_rgb, image_b_depth, image_b_mask, image_b_pose = self._scene_structure.get_rgbd_mask_pose(scene_name, image_b_idx)
+        
+        
+        
+        
+        
+        
+        
+    
+    
+        
+            
+        
         
         
         
