@@ -589,6 +589,21 @@ class SpartanDataSource(DenseCorrDataSource):
         
         image_b_rgb, image_b_depth, image_b_mask, image_b_pose = self._scene_structure.get_rgbd_mask_pose(scene_name, image_b_idx)
         
+        image_a_depth_numpy = np.asarray(image_a_depth)
+        image_b_depth_numpy = np.asarray(image_b_depth)
+        
+        if self.sample_matches_only_off_mask:
+            correspondence_mask = np.asarray(image_a_mask)
+        else:
+            correspondence_mask = None
+        
+        
+        uv_a, uv_b = correspondence_finder.batch_find_pixel_correspondences(image_a_depth_numpy, image_a_pose, 
+                                                                            image_b_depth_numpy,image_b_pose,
+                                                                            img_a_mask = correspndence_mask,
+                                                                            num_attempts=self.num_matching_attempts
+                                                                            )
+        
         
         
         
