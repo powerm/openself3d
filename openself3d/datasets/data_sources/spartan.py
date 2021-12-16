@@ -1,14 +1,16 @@
 import os
 import copy 
 import math
-from typing import Counter 
+from typing import Counter
+from PIL import Image 
 import numpy as np 
 import mmcv 
 import torch
 import glob
 import random
+import utils
 
-from .denseCorr import DenseCorrDataSource
+from denseCorr import DenseCorrDataSource
 
 
 class ImageType:
@@ -73,13 +75,13 @@ class SceneStructure(object):
             raise ValueError("unsupported image type")
         
         if isinstance(img_idx, int):
-            img_index = utils.getPaddedString(img_index, width = SpartanDataset.PADDED_STRING_WIDTH)
+            img_index = utils.getPaddedString(img_idx, width = 6)
         
         return os.path.join(images_dir, img_index + file_extension)
     
     def get_camera_intrinsics(self, scene_name):
         
-        return CameraIntrinsics.from_yaml_file(self.camera_info_file(scene_name))
+        return utils.CameraIntrinsics.from_yaml_file(self.camera_info_file(scene_name))
           
     def get_pose_data(self,scene_name):
         """checks if hvae not aleardy loaded the pose_data.yaml for this scene,
@@ -112,16 +114,16 @@ class SceneStructure(object):
             scene_name ([str]): [description]
             img_idx ([int]): [description]
         :return: rgb,depth, mask, pose
-        :rtype: PIL.Image.Image, PIL.Image.Image, PIL.Image.IMage, a 4x4 numpy array
+        :rtype: PIL.Image.Image, PIL.Image.Image, PIL.Image.Image, a 4x4 numpy array
         """
         rgb_file = self.get_image_filename(scene_name,img_idx,ImageType.RGB)
-        rgb = mmcv.load(rgb_file)
+        rgb = utils.load_rgb_image(rgb_file)
         
         depth_file = self.get_image_filename(scene_name, img_idx, ImageType.MASK)
-        depth = mmcv.load(depth_file)
+        depth = Image.open(depth_file)
         
         mask_file= self.get_image_filename(scene_name,img_idx, ImageType.MASK) 
-        mask = mmcv.load(mask_file)
+        mask = Image.open(mask_file)
         
         pose = self.get_pose_from_scene_name_and_idx(scene_name,img_idx)
         
@@ -138,8 +140,8 @@ class SceneStructure(object):
         """
         pose_data = self.get_pose_data(scene_name)
         image_idxs = pose_data.keys()
-        random.choice(image_idxs)
-        random_idx = random.choice(image_idxs)
+        #random.choice(list(image_idxs))
+        random_idx = random.choice(list(image_idxs))
         return random_idx
     
     def get_img_idx_with_different_pose(self, scene_name, pose_a, threshold = 0.2, angle_threshold = 20, num_attempts = 10):
@@ -183,8 +185,6 @@ class SceneStructure(object):
         return None
         
         
-
-
 
 
 
@@ -603,22 +603,3 @@ class SpartanDataSource(DenseCorrDataSource):
                                                                             img_a_mask = correspndence_mask,
                                                                             num_attempts=self.num_matching_attempts
                                                                             )
-        
-        
-        
-        
-        
-        
-        
-    
-    
-        
-            
-        
-        
-        
-        
-                
-            
-        
-        
