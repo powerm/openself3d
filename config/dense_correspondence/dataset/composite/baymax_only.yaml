@@ -1,0 +1,6 @@
+logs_root_path: /media/cyn/e45903dd-cd53-44c9-8622-c21e80814317/whl/dataset/dense-net-entire/pdc/logs_proto
+
+single_object_scenes_config_files:
+- baymax.yaml
+
+multi_object_scenes_config_files: []
