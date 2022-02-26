@@ -190,7 +190,7 @@ def batch_find_pixel_correspondences(img1_depth, img1_pose, img2_depth, img2_pos
         v1_vec = img1_indices[0][rand_indices]
         uv1_vec = (u1_vec, v1_vec)
     
-    img1_depth_float = img1_depth.astype(np.float)
+    img1_depth_float = img1_depth.copy().astype(np.float)
     DEPTH_IM_SCALE = 1000.0 #将厘米转换为米。
     depth1_vec = img1_depth_float[(v1_vec, u1_vec)]*1.0/DEPTH_IM_SCALE
     z1_vec = depth1_vec
@@ -275,7 +275,7 @@ def numpy_rand_select_pixel(width, height, num_samples=1):
 
     
 
-def create_non_correspondences(uv_b_matches, img_b_shape, num_non_matches_per_match=100, img_b_mask=None, img_b_depth=None):
+def create_non_correspondences(uv_a_matches, uv_b_matches, img_b_shape, num_non_matches_per_match=100, img_b_mask=None, img_b_depth=None):
     """
     Takes in pixel matches (uv_b_matches) that correspond to matches in another image, and generates non-matches by just sampling in image space.
     Optionally, the non-matches can be sampled from a mask for image b.
@@ -384,7 +384,10 @@ def create_non_correspondences(uv_b_matches, img_b_shape, num_non_matches_per_ma
     uv_b_non_matches_1 = where(uv_b_non_matches_1 < lower_bound_vec, 
         uv_b_non_matches_1 + upper_bound_vec, uv_b_non_matches_1)
     
-    return (uv_b_non_matches_1, uv_b_non_matches_0)
+    uv_a_matches_0 = (np.tile(uv_a_matches[0],(num_non_matches_per_match, 1)).T).reshape(-1)
+    uv_a_matches_1 = (np.tile(uv_a_matches[1],(num_non_matches_per_match, 1)).T).reshape(-1)
+    
+    return (uv_a_matches_0, uv_a_matches_1), (uv_b_non_matches_1.reshape(-1), uv_b_non_matches_0.reshape(-1))
 
 
 
