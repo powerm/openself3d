@@ -1,0 +1,6 @@
+
+2022-01-05   完成开发 batch_find_pixel_correspondences  功能。
+2022-01-06   继续开发spartan.py 
+2022-02-27   完成correspondence_finder_new and correspondences_augmentation
+                          和 correspondence_plotter and correspondence_test的开发工作
+                          完成  spartan.py  中 get_within_scene_data 功能的开发。
