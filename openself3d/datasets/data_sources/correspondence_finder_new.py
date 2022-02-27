@@ -89,7 +89,7 @@ def random_sample_from_masked_image_numpy(img_mask, num_samples):
         u_vec = mask_indices[0][rand_indices]
         v_vec = mask_indices[1][rand_indices]
         #uv_vec = np.vstack((u_vec, v_vec))
-        return (u_vec, v_vec)
+        return (v_vec, u_vec)
 
 
 def apply_transform(vec3, transform4):
@@ -428,7 +428,7 @@ def create_blind_non_correspondences(uv_a,  image_a_mask, image_b_mask):
         else:
             blind_non_matches_b =blind_uv_b
     
-    return   (blind_non_matches_a[1], blind_non_matches_a[0]),  (blind_non_matches_b[1],blind_non_matches_b[0]), no_blind_matches_found
+    return   (blind_non_matches_a[1], blind_non_matches_a[0]),  (blind_non_matches_b[0],blind_non_matches_b[1]), no_blind_matches_found
                 
     
     
