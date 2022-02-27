@@ -266,7 +266,7 @@ def merge_images_with_occlusions(image_a, image_b, mask_a, mask_b, matches_pair_
     background_image_numpy = three_channel_mask_complement * background_image_numpy
 
     # Finally, merge these two images
-    merged_image_numpy = foreground_image_numpy + background_image_numpy
+    merged_image_numpy = foreground_image_numpy + background_image_numpy                                                                                                                      
 
     # Prune occluded matches
     background_matches_pair = prune_matches_if_occluded(foreground_mask_numpy, background_matches_pair)
@@ -327,10 +327,14 @@ def prune_matches_if_occluded(foreground_mask_numpy, background_matches_pair):
     if len(idxs_to_keep) == 0:
         return (None, None)
 
-    idxs_to_keep = torch.LongTensor(idxs_to_keep)
-    background_matches_a = (torch.index_select(background_matches_a[0], 0, idxs_to_keep), torch.index_select(background_matches_a[1], 0, idxs_to_keep))
-    background_matches_b = (torch.index_select(background_matches_b[0], 0, idxs_to_keep), torch.index_select(background_matches_b[1], 0, idxs_to_keep))
+    #idxs_to_keep = torch.LongTensor(idxs_to_keep)
+    #background_matches_a = (torch.index_select(background_matches_a[0], 0, idxs_to_keep), torch.index_select(background_matches_a[1], 0, idxs_to_keep))
+    #background_matches_b = (torch.index_select(background_matches_b[0], 0, idxs_to_keep), torch.index_select(background_matches_b[1], 0, idxs_to_keep))
 
+    idxs_to_keep = np.asarray(idxs_to_keep)
+    background_matches_a = (background_matches_a[0][idxs_to_keep], background_matches_a[0][idxs_to_keep])
+    background_matches_b = (background_matches_b[0][idxs_to_keep], background_matches_b[0][idxs_to_keep])
+    
     return (background_matches_a, background_matches_b)
 
 def merge_matches(matches_one, matches_two):
@@ -343,8 +347,10 @@ def merge_matches(matches_one, matches_two):
 
         Note: only support torch.LongTensors
     """
-    concatenated_u = torch.cat((matches_one[0], matches_two[0]))
-    concatenated_v = torch.cat((matches_one[1], matches_two[1]))
+    #concatenated_u = torch.cat((matches_one[0], matches_two[0]))
+    #concatenated_v = torch.cat((matches_one[1], matches_two[1]))
+    concatenated_u = np.concatenate((matches_one[0], matches_two[0]))
+    concatenated_v = np.concatenate((matches_one[1], matches_two[1]))
     return (concatenated_u, concatenated_v)
 
 
