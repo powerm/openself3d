@@ -1,0 +1,11 @@
+{
+    "python.pythonPath": "/home/cyn/miniconda3/envs/openself3d/bin/python",
+    "python.analysis.extraPaths": [
+        "./openself3d/datasets/data_sources"
+    ],
+    "jupyter.jupyterServerType": "remote",
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true
+    ]
+}
