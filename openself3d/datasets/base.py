@@ -22,8 +22,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         
     def __len__(self):
         return self.data_source.get_length()
-    
-    
+       
     @abstractmethod
     def __getitem__(self, idx):
         pass
