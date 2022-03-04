@@ -387,7 +387,7 @@ def create_non_correspondences(uv_a_matches, uv_b_matches, img_b_shape, num_non_
     uv_a_matches_0 = (np.tile(uv_a_matches[0],(num_non_matches_per_match, 1)).T).reshape(-1)
     uv_a_matches_1 = (np.tile(uv_a_matches[1],(num_non_matches_per_match, 1)).T).reshape(-1)
     
-    return (uv_a_matches_0, uv_a_matches_1), (uv_b_non_matches_1.reshape(-1), uv_b_non_matches_0.reshape(-1))
+    return (uv_a_matches_0, uv_a_matches_1), (uv_b_non_matches_1.reshape(-1).astype(np.int64), uv_b_non_matches_0.reshape(-1).astype(np.int64))
 
 
 

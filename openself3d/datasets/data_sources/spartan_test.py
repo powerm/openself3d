@@ -21,7 +21,7 @@ def subsample_tuple_pair(uv_a, uv_b, num_samples):
 scenes_dir = '/media/cyn/e45903dd-cd53-44c9-8622-c21e80814317/whl/dataset/dense-net-entire/pdc/logs_proto'
 configRoot = '/home/cyn/code/openself3d/config/dense_correspondence'
 dataSetconfigRoot = os.path.join(configRoot, 'dataset')
-config_file = 'baymax_only.yaml'
+config_file = '4_shoes_all.yaml'
 
 config = prepare_config(dataSetconfigRoot, config_file,  scenes_dir)
 
@@ -43,28 +43,29 @@ plot_uv_a_background_long, plot_uv_b_background_non_matches_long = subsample_tup
 plot_blind_uv_a, plot_blind_uv_b = subsample_tuple_pair(blind_non_matches_a,  blind_non_matches_b, num_samples=num_matches_to_plot*10)
 
 if uv_a is not None:
-    fig, axes = correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
+        fig, axes = correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
                                                                                image_b_rgb_PIL, image_b_depth_numpy,
                                                                                plot_uv_a, plot_uv_b, show=False)
 
-    correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
+        correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
                                                                    image_b_rgb_PIL, image_b_depth_numpy,
                                                                    plot_uv_a_masked_long, plot_uv_b_masked_non_matches_long,
                                                                    use_previous_plot=(fig, axes),
                                                                    circ_color='r')
 
-    fig, axes = correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
+        fig, axes = correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
                                                                                image_b_rgb_PIL, image_b_depth_numpy,
                                                                                plot_uv_a, plot_uv_b, show=False)
 
-    correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
+        correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
                                                                    image_b_rgb_PIL, image_b_depth_numpy,
                                                                    plot_uv_a_background_long, plot_uv_b_background_non_matches_long,
                                                                    use_previous_plot=(fig, axes),
                                                                    circ_color='b')
+        
 
 
-    correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
+correspondence_plotter.plot_correspondences_direct(image_a_rgb_PIL, image_a_depth_numpy,
                                                                    image_b_rgb_PIL, image_b_depth_numpy,
                                                                    plot_blind_uv_a, plot_blind_uv_b,
                                                                    circ_color='k', show=True)

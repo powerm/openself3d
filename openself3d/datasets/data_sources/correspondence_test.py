@@ -8,7 +8,6 @@ import os
 import sys
 import  time
 
-import correspondence_finder_old
 import correspondence_finder_new
 import correspondence_plotter
 from spartan import SceneStructure

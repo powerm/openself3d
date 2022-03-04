@@ -6,7 +6,7 @@ import os
 import sys 
 from PIL  import Image 
 
-import transformations
+from .transformations   import  quaternion_matrix, quaternion_from_matrix
 
 import mmcv
 
@@ -96,7 +96,7 @@ def homogenous_transform_from_dict(d):
     quat[2] = quatDict['y']
     quat[3] = quatDict['z']
 
-    transform_matrix = transformations.quaternion_matrix(quat)
+    transform_matrix = quaternion_matrix(quat)
     transform_matrix[0:3,3] = np.array(pos)
 
     return transform_matrix
@@ -149,7 +149,7 @@ def compute_angle_between_poses(pose_a, pose_b):
     :rtype:
     """
 
-    quat_a = transformations.quaternion_from_matrix(pose_a)
-    quat_b = transformations.quaternion_from_matrix(pose_b)
+    quat_a = quaternion_from_matrix(pose_a)
+    quat_b = quaternion_from_matrix(pose_b)
 
     return compute_angle_between_quaternions(quat_a, quat_b)
